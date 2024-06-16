@@ -55,53 +55,50 @@ def send_transaction(transaction, private_key):
 # Pored ovoga - opcija zaglavlja moze isto (jwt token)
 # Moze doci JWT tokene da ubacujemo
 
-# dodati kurira (biciklistu)
-result = requests.post(
-    url=OWNER_URL + "/add_courier",
-    json={
-        "email": "stefan9@gmail.com",
-        "forename": "Stefan",
-        "surname": "Despot",
-        "type": 0,
-        "password": "123"
-    }
-)
-
-courier_id = result.json()["id"]
-
-# print("OK")
-
-# ulogovati se
-try:
-    result = requests.post(
-        url=COURIER_URL + "/login",
-        json={
-            "email": "stefan9@gmail.com",
-            "password": "123"
-        }
-    )
-except Exception as err:
-    print(err)
-
-print("OK2")
-
-access_token = result.json()["access_token"]
-
-print(access_token)
-
-# dodati dva paketa
-result = requests.post(
-    url=OWNER_URL + "/add_package",
-    json={
-        "description": "Package0",
-        "delivery_price": 100
-    }
-)
-
-package1_id = result.json()["id"]
-
-print(package1_id)
-
+# # dodati kurira (biciklistu)
+# result = requests.post(
+#     url=OWNER_URL + "/add_courier",
+#     json={
+#         "email": "stefan15@gmail.com",
+#         "forename": "Stefan",
+#         "surname": "Despot",
+#         "type": 0,
+#         "password": "123"
+#     }
+# )
+#
+# courier_id = result.json()["id"]
+#
+# # print("OK")
+#
+# # ulogovati se
+# result = requests.post(
+#     url=COURIER_URL + "/login",
+#     json={
+#         "email": "stefan15@gmail.com",
+#         "password": "123"
+#     }
+# )
+#
+# print("OK2")
+#
+# access_token = result.json()["access_token"]
+#
+# print(access_token)
+#
+# # dodati dva paketa
+# result = requests.post(
+#     url=OWNER_URL + "/add_package",
+#     json={
+#         "description": "Package0",
+#         "delivery_price": 100
+#     }
+# )
+#
+# package1_id = result.json()["id"]
+#
+# print(package1_id)
+#
 result = requests.post(
     url=OWNER_URL + "/add_package",
     json={
@@ -111,64 +108,92 @@ result = requests.post(
 )
 
 package2_id = result.json()["id"]
-
-print(package2_id)
-
-
+#
+# print(package2_id)
+#
+#
 courier_address, courier_private_key = create_and_initialize_account()
 customer_address, customer_private_key = create_and_initialize_account()
+#
+# # svaki kontejner - ovu metodu jednom
+# # moraju imati ISTU ADRESU, PRIVATNI KLJUC VLASNIKA
+# # ovo se radi -> prilikom json fajla -> owner_account.json
+# # ovo se prekopira u root svakog kontejnera, kao i abi i bin pametnog ugovora
+#
+# # kada pokrecemo vise servisa pomocu yaml fajla -> svi su obojeni nekom bojom (neka greska itd)
+#
+# # preuzimanje paketa
+# headers = {
+#     "Authorization": f"Bearer {access_token}"
+# }
+#
+# result = requests.post(
+#     url=COURIER_URL + "/take_package",
+#     json={
+#         "courier_id": courier_id,
+#         "package_id": package1_id,
+#         "courier_address": courier_address,
+#         "customer_address": customer_address
+#     },
+#     headers=headers
+# )
+#
+# print(result)
+#
+# # stanje kurira pre dostave
+# courier_balance = web3.eth.get_balance(courier_address)
+# print(f"COURIER BALANCE: {courier_balance}")
+#
+# print(result.json())
+# delivery_id = result.json()["id"]
+#
+# result = requests.get(
+#     url=CUSTOMER_URL + f"/create_pay_invoice/{delivery_id}/{customer_address}"
+# )
+# transaction = result.json()["transaction"]
+#
+# send_transaction(transaction, customer_private_key)
+#
+# result = requests.get(
+#     url=CUSTOMER_URL +
+#     f"/create_confirm_delivery_invoice/{delivery_id}/{customer_address}"
+# )
+#
+# transaction = result.json()["transaction"]
+#
+# send_transaction(transaction, customer_private_key)
+#
+# # stanje nakon dostave
+# courier_balance = web3.eth.get_balance(courier_address)
+# print(f"COURIER BALANCE: {courier_balance}")
+#
+# dodati novog kurira (random)
+result = requests.post(
+    url=OWNER_URL + "/add_courier",
+    json={
+        "email": "fica@gmail.com",
+        "forename": "Stefan",
+        "surname": "Despot",
+        "type": 0,
+        "password": "123"
+    }
+)
 
-# svaki kontejner - ovu metodu jednom
-# moraju imati ISTU ADRESU, PRIVATNI KLJUC VLASNIKA
-# ovo se radi -> prilikom json fajla -> owner_account.json
-# ovo se prekopira u root svakog kontejnera, kao i abi i bin pametnog ugovora
+courier_id = result.json()["id"]
 
-# kada pokrecemo vise servisa pomocu yaml fajla -> svi su obojeni nekom bojom (neka greska itd)
 
-# preuzimanje paketa
+result = requests.post(
+    url=COURIER_URL + "/login",
+    json={
+        "email": "fica@gmail.com",
+        "password": "123"
+    }
+)
+
+access_token = result.json()["access_token"]
 headers = {
     "Authorization": f"Bearer {access_token}"
 }
-
-result = requests.post(
-    url=COURIER_URL + "/take_package",
-    json={
-        "courier_id": courier_id,
-        "package_id": package1_id,
-        "courier_address": courier_address,
-        "customer_address": customer_address
-    },
-    headers=headers
-)
-
-print(result)
-
-# stanje kurira pre dostave
-courier_balance = web3.eth.get_balance(courier_address)
-print(f"COURIER BALANCE: {courier_balance}")
-
-print(result.json())
-delivery_id = result.json()["id"]
-
-result = requests.get(
-    url=CUSTOMER_URL + f"/create_pay_invoice/{delivery_id}/{customer_address}"
-)
-transaction = result.json()["transaction"]
-
-send_transaction(transaction, customer_private_key)
-
-result = requests.get(
-    url=CUSTOMER_URL +
-    f"/create_confirm_delivery_invoice/{delivery_id}/{customer_address}"
-)
-
-transaction = result.json()["transaction"]
-
-send_transaction(transaction, customer_private_key)
-
-# stanje nakon dostave
-courier_balance = web3.eth.get_balance(courier_address)
-print(f"COURIER BALANCE: {courier_balance}")
 
 # pregled kurira
 result = requests.get(
@@ -191,16 +216,16 @@ result = requests.get(
 print(result.json())
 
 # obrada greske
-try:
-    result = requests.post(
-        url=COURIER_URL + "/take_package",
-        json={
-            "courier_id": courier_id,
-            "package_id": package2_id,
-            "courier_address": courier_address,
-            "customer_address": customer_address
-        },
-        headers=headers
-    )
-except Exception as err:
-    print(err)
+
+result = requests.post(
+    url=COURIER_URL + "/take_package",
+    json={
+        "courier_id": courier_id,
+        "package_id": package2_id,
+        "courier_address": courier_address,
+        "customer_address": customer_address
+    },
+    headers=headers
+)
+
+print(result.text)

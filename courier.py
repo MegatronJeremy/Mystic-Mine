@@ -1,8 +1,10 @@
 import os
+import time
 
 from flask import Flask
 from flask import request
 from flask import jsonify
+from redis import Redis
 
 from models import database
 from models import Package
@@ -11,7 +13,6 @@ from models import Courier
 
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import create_refresh_token
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import get_jwt
@@ -24,7 +25,6 @@ application = Flask(__name__)
 application.config.from_object(Configuration)
 
 database.init_app(application)
-
 
 # jedna funkcionalnost - preuzme neki paket, id paketa, id kurira, adrese kurira i kupca
 
@@ -44,20 +44,28 @@ def login():
 
     user = Courier.query.filter(Courier.email == email,
                                 Courier.password == password).first()
+    if not user:
+        return "User not found", 401
 
     access_token = create_access_token(identity=user.email)
 
     return jsonify(access_token=access_token)
 
 
-banned = []
+redis_client = Redis(host=Configuration.REDIS_HOST, port=Configuration.REDIS_PORT, db=0)
+
+
+def is_username_banned(username):
+    print(username)
+    return redis_client.sismember('banned_usernames', username)
 
 
 def banned_check(function):
     @jwt_required()
     def wrapper(*args, **kwargs):
         username = get_jwt_identity()
-        if (username not in banned):
+        if not is_username_banned(username):
+            print("OK")
             return function(*args, **kwargs)
         else:
             return "Invalid token"
@@ -84,8 +92,8 @@ def take_package():
 
     # mora proveriti da li paket postoji
     package = Package.query.filter(Package.id == package_id).one()
-    if (not package):
-        return ("Invalid package id!", 400)
+    if not package:
+        return "Invalid package id!", 400
 
     abi = utilities.read_file("./output/Delivery.abi")
     bytecode = utilities.read_file("./output/Delivery.bin")
@@ -98,7 +106,8 @@ def take_package():
 
     # napravi transakciju ugovora
     # nije trebao da se pravi novi ugovor - ali ovako najjednostavnije
-    create_contract_transaction = contract.constructor(owner_address, courier_address, customer_address, package.delivery_price).build_transaction({
+    create_contract_transaction = contract.constructor(owner_address, courier_address, customer_address,
+                                                       package.delivery_price).build_transaction({
         "from": owner_address,
         "nonce": web3.eth.get_transaction_count(owner_address),
         "gasPrice": 1
@@ -124,10 +133,8 @@ def take_package():
     return jsonify(id=new_delivery.id)
 
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
     PORT = os.environ["PORT"] if ("PORT" in os.environ) else "5000"
     HOST = "0.0.0.0" if ("PRODUCTION" in os.environ) else "localhost"
-
-   
 
     application.run(debug=True, port=PORT, host=HOST)

@@ -8,7 +8,6 @@ from flask import jsonify
 
 from configuration import Configuration
 
-
 from models import database
 from models import Package
 from models import Courier
@@ -69,10 +68,12 @@ def get_couriers():
     return [str(courier) for courier in Courier.query.all()]
 
 
-def update(username):
-    with Redis(host=Configuration.REDIS_HOST, port=Configuration.REDIS_PORT, db=0) as redis:
-        redis.lpush(Configuration.REDIS_BUFFER, username)
-        redis.publish(Configuration.REDIS_CHANNEL, username)
+redis_client = Redis(host=Configuration.REDIS_HOST, port=Configuration.REDIS_PORT, db=0)
+
+
+def ban_username(username):
+    redis_client.sadd('banned_usernames', username)
+    print(f'Username "{username}" has been banned.')
 
 
 @application.route("/remove_courier", methods=["GET"])
@@ -86,7 +87,7 @@ def remove_courier():
     database.session.delete(user)
     database.session.commit()
 
-    update(username)
+    ban_username(username)
 
     return "OK"
 
