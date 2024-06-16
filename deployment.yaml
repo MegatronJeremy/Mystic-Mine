@@ -1,0 +1,59 @@
+version: "3"
+
+# kada bi negde stvarno pokretali
+# imamo bazu i simulator blockchain platforme, kao i nasa tri kontejnera sto smo napravili - ne treba nam adminer (on je za debug)
+services:
+  database:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=database
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      # ako ovako navedem - svaka sql skripta ce biti pokrenuta prilikom pokretanja kontejnera
+
+  ganache-cli:
+    image: trufflesuite/ganache-cli
+    ports:
+      - 8545:8545
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+
+  owner:
+    image: owner
+    environment:
+      - PRODUCTION=True
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=root
+      - DATABASE_URL=database
+      - DATABASE_NAME=courier_service_database
+      - BLOCKCHAIN_URL=http://ganache-cli:8545
+    ports:
+      - 5000:5000
+
+  courier:
+    image: courier
+    environment:
+      - PRODUCTION=True
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=root
+      - DATABASE_URL=database
+      - DATABASE_NAME=courier_service_database
+      - BLOCKCHAIN_URL=http://ganache-cli:8545
+    ports:
+      - 5001:5000
+
+  customer:
+    image: customer
+    environment:
+      - PRODUCTION=True
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=root
+      - DATABASE_URL=database
+      - DATABASE_NAME=courier_service_database
+      - BLOCKCHAIN_URL=http://ganache-cli:8545
+    ports:
+      - 5002:5000

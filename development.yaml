@@ -1,0 +1,31 @@
+version: "3"
+
+# deployment - kad bi stvarno pokretali aplikaciju (da nam ne postoji pristup bazi spolja)
+# development - test okruzenje
+
+# pokretanje tri servise koja nisu nasa aplikacije
+services:
+  database:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=database
+    ports:
+      - 3307:3306
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+
+  ganache-cli:
+    image: trufflesuite/ganache-cli
+    ports:
+      - 8545:8545
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379

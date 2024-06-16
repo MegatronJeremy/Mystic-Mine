@@ -1,0 +1,11 @@
+flask
+flask-jwt-extended
+flask_sqlalchemy
+sqlalchemy_utils
+mysqlclient
+flask_migrate
+web3==6.4.0
+requests
+flask-jwt-extended
+cryptography
+redis
